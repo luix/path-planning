@@ -25,32 +25,247 @@
 
 using namespace std;
 
+constexpr double pi() { return M_PI; }
+
+// For converting back and forth between radians and degrees.
+double deg2rad(double x) { return x * pi() / 180; }
+double rad2deg(double x) { return x * 180 / pi(); }
+
+double distance(double x1, double y1, double x2, double y2) {
+  return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+}
+
+// Transform from Frenet s,d coordinates to Cartesian x,y
+vector<double> getXY(double s, double d, const vector<double> &maps_s, const vector<double> &maps_x, const vector<double> &maps_y)
+{
+  int prev_wp = -1;
+
+  while(s > maps_s[prev_wp+1] && (prev_wp < (int)(maps_s.size()-1) ))
+  {
+    prev_wp++;
+  }
+
+  int wp2 = (prev_wp+1)%maps_x.size();
+
+  double heading = atan2((maps_y[wp2]-maps_y[prev_wp]),(maps_x[wp2]-maps_x[prev_wp]));
+  // the x,y,s along the segment
+  double seg_s = (s-maps_s[prev_wp]);
+
+  double seg_x = maps_x[prev_wp]+seg_s*cos(heading);
+  double seg_y = maps_y[prev_wp]+seg_s*sin(heading);
+
+  double perp_heading = heading-pi()/2;
+
+  double x = seg_x + d*cos(perp_heading);
+  double y = seg_y + d*sin(perp_heading);
+
+  return {x,y};
+
+}
+
+Path SelfDrivingCar::Route(const Path &previous_path,
+                           const Vehicle &ego_car,
+                           const vector<RaceCar> &racers) {
+
+  int frontcar_idx = road.FindFrontCarInLane(ego_car, racers, lane);
+
+  bool is_free_to_go = true;
+  if (frontcar_idx != -1) {
+    const RaceCar & car(racers[frontcar_idx]);
+//    double response_time = kTimeInterval * kPathLength;
+//    auto safe_dist = ego_car.speed * kMilesPerHourToMetersPerSecond
+//                     * response_time + kSafeCarDistance;
+    auto dist = car.s - ego_car.s;
+    //is_free_to_go = (dist >= safe_dist);
+    is_free_to_go = (dist >= kFrontCarSafeCarDistance);
+  }
+
+  if (!is_free_to_go) {
+    refVelocity -= 0.336; // 0.224;
+  } else if (refVelocity < kRefVel) {
+    refVelocity += 0.336;
+  }
+
+
+  vector<double> ptsx;
+  vector<double> ptsy;
+
+  cout << "ego_car[B] { x:" << ego_car.x;
+  cout << ", y:" << ego_car.y;
+  cout << ", s:" << ego_car.s;
+  cout << ", d:" << ego_car.d;
+  cout << ", speed:" << ego_car.speed;
+  cout << ", yaw:" << ego_car.yaw;
+  cout << " }" << endl;
+
+  double ref_x = ego_car.x;
+  double ref_y = ego_car.y;
+  double ref_yaw = deg2rad(ego_car.yaw);
+
+  int prev_size = previous_path.X.size();
+  if ( prev_size < 2 ) {
+    double prev_car_x = ego_car.x - cos(ego_car.yaw);
+    double prev_car_y = ego_car.y - sin(ego_car.yaw);
+
+    ptsx.push_back(prev_car_x);
+    ptsx.push_back(ego_car.x);
+
+    ptsy.push_back(prev_car_y);
+    ptsy.push_back(ego_car.y);
+  }
+  else {
+
+    ref_x = previous_path.X[prev_size - 1];
+    ref_y = previous_path.Y[prev_size - 1];
+
+    double ref_x_prev = previous_path.X[prev_size - 2];
+    double ref_y_prev = previous_path.Y[prev_size - 2];
+    ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
+
+    cout << "  ref_x_prev:" << ref_x_prev;
+    cout << ", ref_y_prev:" << ref_y_prev << endl;
+    cout << "  ref_x:" << ref_x;
+    cout << ", ref_y:" << ref_y << endl;
+
+    ptsx.push_back(ref_x_prev);
+    ptsx.push_back(ref_x);
+
+    ptsy.push_back(ref_y_prev);
+    ptsy.push_back(ref_y);
+  }
+
+  cout << "ref_yaw: " << ref_yaw << endl;
+
+  vector<double> next_wp0 = getXY(
+      ego_car.s + 45, (2 + 4 * lane),
+      road.s, road.x, road.y
+  );
+  vector<double> next_wp1 = getXY(
+      ego_car.s + 68, (2 + 4 * lane),
+      road.s, road.x, road.y
+  );
+  vector<double> next_wp2 = getXY(
+      ego_car.s + 90, (2 + 4 * lane),
+      road.s, road.x, road.y
+  );
+
+  cout << "  next_wp0[x]:" << next_wp0[0];
+  cout << ", next_wp1[x]:" << next_wp1[0];
+  cout << ", next_wp2[x]:" << next_wp2[0] << endl;
+
+  ptsx.push_back(next_wp0[0]);
+  ptsx.push_back(next_wp1[0]);
+  ptsx.push_back(next_wp2[0]);
+
+  ptsy.push_back(next_wp0[1]);
+  ptsy.push_back(next_wp1[1]);
+  ptsy.push_back(next_wp2[1]);
+
+  cout << "ptsx.size[A]:" << ptsx.size() << endl;
+  cout << "ptsy.size[A]:" << ptsy.size() << endl;
+
+  for ( int i = 0 ; i < ptsx.size() ; i++ ) {
+    double shift_x = ptsx[i] - ref_x;
+    double shift_y = ptsy[i] - ref_y;
+
+    ptsx[i] = (shift_x * cos(0 - ref_yaw) - shift_y * sin(0 - ref_yaw));
+    ptsy[i] = (shift_x * sin(0 - ref_yaw) + shift_y * cos(0 - ref_yaw));
+
+    cout << "  ptsx[" << i << "]" << ptsx[i];
+    cout << ", ptsy[" << i << "]" << ptsy[i] << endl;
+  }
+
+  cout << "ptsx.size[B]:" << ptsx.size() << endl;
+  cout << "ptsy.size[B]:" << ptsy.size() << endl;
+
+  tk::spline s_path;
+
+  s_path.set_points(ptsx,ptsy);
+
+//  vector<double> next_x_vals;
+//  vector<double> next_y_vals;
+  WayPoints x_path;
+  WayPoints y_path;
+
+  for ( int i = 0 ; i < previous_path.X.size() ; i++ ) {
+    x_path.push_back(previous_path.X[i]);
+    y_path.push_back(previous_path.Y[i]);
+  }
+
+  cout << "x_path.size[A]:" << x_path.size() << endl;
+  cout << "y_path.size[A]:" << y_path.size() << endl;
+
+  double target_x = 30.0;
+  double target_y = s_path(target_x);
+  double target_dist = sqrt((target_x) * (target_x) + (target_y) * (target_y));
+  double N = (target_dist / (.02 * refVelocity / 2.24) );
+
+  double x_add_on = 0;
+  //int prev_size_int = previous_path.X.size();
+
+  for ( int i = 1 ; i <= ( 50 - previous_path.X.size() ) ; i++ ) {
+    double x_point = x_add_on + (target_x) / N;
+    double y_point = s_path(x_point);
+
+    x_add_on = x_point;
+
+    double x_ref = x_point;
+    double y_ref = y_point;
+
+    x_point = (x_ref * cos(ref_yaw) - y_ref * sin(ref_yaw));
+    y_point = (x_ref * sin(ref_yaw) + y_ref * cos(ref_yaw));
+
+    x_point += ref_x;
+    y_point += ref_y;
+
+    //debug
+    cout << "[" << i;
+    cout << "] x_point:" << x_point;
+    cout << ", y_point:" << y_point;
+    cout << ", N:" << N;
+    cout << ", x_add_on:" << x_add_on;
+    cout << endl;
+
+    x_path.push_back(x_point);
+    y_path.push_back(y_point);
+
+  }
+
+  cout << "x_path.size[B]:" << x_path.size() << endl;
+  cout << "y_path.size[B]:" << y_path.size() << endl;
+
+//  previous_s_path = s;
+//  in_lane_change = true;
+
+  return Path(x_path, y_path);
+  //return Path(next_x_vals, next_x_vals);
+}
 
 Path SelfDrivingCar::Planner(const Path &previous_path,
                              const Vehicle &ego_car,
                              const vector<RaceCar> &racers) {
 
-  auto n_consumed = previous_s_path.size() - previous_path.size();
-  previous_s_path.erase(previous_s_path.begin(),
-                        previous_s_path.begin() + n_consumed);
-
-  if (in_lane_change) {
-    if (previous_path.size() <= kPathLength) { // < kPathLength
-      in_lane_change = false;
-    }
-    return previous_path;
-  }
-
-  if (previous_path.size() == 0) {
-    return FastStart(previous_path, ego_car, racers);
-  }
+//  auto n_consumed = previous_s_path.size() - previous_path.size();
+//  previous_s_path.erase(previous_s_path.begin(),
+//                        previous_s_path.begin() + n_consumed);
+//
+//  if (in_lane_change) {
+//    if (previous_path.size() <= kPathLength) { // < kPathLength
+//      in_lane_change = false;
+//    }
+//    return previous_path;
+//  }
+//
+//  if (previous_path.size() == 0) {
+//    return FastStart(previous_path, ego_car, racers);
+//  }
 
 //  bool is_previous_plan_available = (previous_path.size() >= 2);
 //  if (! is_previous_plan_available) {
 //    return FastStart(previous_path, ego_car, racers);
 //  }
 
-  int ego_car_lane = road.FindLane(ego_car.d);
+  //int ego_car_lane = road.FindLane(ego_car.d);
   double ego_car_speed = ego_car.speed * kMilesPerHourToMetersPerSecond;
   vector<double> frontcar_speeds;
   vector<double> frontcar_dists;
@@ -67,21 +282,22 @@ Path SelfDrivingCar::Planner(const Path &previous_path,
     frontcar_dists.push_back(frontcar_dist);
   }
 
-  if (frontcar_speeds[ego_car_lane] <= 0.95 * kMaxSpeed
-      && frontcar_dists[ego_car_lane] <= 100) {
+  if (frontcar_speeds[lane] <= 0.95 * kMaxSpeed
+      && frontcar_dists[lane] <= 60) {
 
     int target_a = 0;
     int target_b = 2;
-    if (ego_car_lane == 0) {
+    if (lane == 0) {
       target_a = 1;
-    } else if (ego_car_lane == 2) {
+    } else if (lane == 2) {
       target_b = 1;
     }
 
     double cost_a = 0;
     double cost_b = 0;
 
-    cout << "eval changing from " << ego_car_lane;
+    cout << " >>>>---------------------------------------->>>   ";
+    cout << "eval changing from " << lane;
     cout << " to " << target_a;
     cout << " or to " << target_b;
     cout << endl;
@@ -99,32 +315,67 @@ Path SelfDrivingCar::Planner(const Path &previous_path,
     (frontcar_speeds[target_a] > frontcar_speeds[target_b]) ? cost_a++ : cost_b++;
     cout << "[compared speeds between target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
 
-    if (safe_a && frontcar_speeds[target_a] >= frontcar_speeds[ego_car_lane] * 1.1) cost_a++;
-    if (safe_b && frontcar_speeds[target_b] >= frontcar_speeds[ego_car_lane] * 1.1) cost_b++;
+    if (safe_a && frontcar_speeds[target_a] >= frontcar_speeds[lane] * 1.1) cost_a++;
+    if (safe_b && frontcar_speeds[target_b] >= frontcar_speeds[lane] * 1.1) cost_b++;
     cout << "[compared speeds on target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
 
-    if (safe_a && frontcar_dists[target_a] >= kSafeCarDistance + frontcar_dists[ego_car_lane]) cost_a++;
-    if (safe_b && frontcar_dists[target_b] >= kSafeCarDistance + frontcar_dists[ego_car_lane]) cost_b++;
+    if (safe_a && frontcar_dists[target_a] >= kSafeCarDistance + frontcar_dists[lane]) cost_a++;
+    if (safe_b && frontcar_dists[target_b] >= kSafeCarDistance + frontcar_dists[lane]) cost_b++;
     cout << "[compared safe minimal distance on target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
 
-    if (safe_a && frontcar_dists[target_a] >= (kSafeCarDistance * 3) + frontcar_dists[ego_car_lane]) cost_a++;
-    if (safe_b && frontcar_dists[target_b] >= (kSafeCarDistance * 3) + frontcar_dists[ego_car_lane]) cost_b++;
+    if (safe_a && frontcar_dists[target_a] >= (kSafeCarDistance * 3) + frontcar_dists[lane]) cost_a++;
+    if (safe_b && frontcar_dists[target_b] >= (kSafeCarDistance * 3) + frontcar_dists[lane]) cost_b++;
     cout << "[compared long distance on target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
 
-    if (safe_a && frontcar_dists[target_a] + kSafeCarDistance >= frontcar_dists[ego_car_lane]) cost_a++;
-    if (safe_b && frontcar_dists[target_b] + kSafeCarDistance >= frontcar_dists[ego_car_lane]) cost_b++;
+    if (safe_a && frontcar_dists[target_a] + kSafeCarDistance >= frontcar_dists[lane]) cost_a++;
+    if (safe_b && frontcar_dists[target_b] + kSafeCarDistance >= frontcar_dists[lane]) cost_b++;
     cout << "[compared short distance on target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
 
-    if (safe_a && cost_a >= 4 && cost_a > cost_b) {
-      cout << "change to line:" << target_a << endl;
-      return ChangeLane(previous_path, ego_car, racers, target_a); // - ego_car_lane);
+      if (safe_a && cost_a >= 4 && cost_a > cost_b) {
+        // check for two lane change
+        bool two_lane_change =  (abs(target_a - lane) == 2);
+        cout << boolalpha;
+        cout << "two_lane_change:" << two_lane_change << endl;
+
+        if (two_lane_change) {
+          cout << "its a two_lane_change..." << endl;
+          if (safe_a & safe_b) {
+            refVelocity -= 3.5;
+            cout << "change to lane:" << target_a << endl;
+            lane = target_a;
+          }
+        } else {
+          cout << "change to lane:" << target_a << endl;
+          lane = target_a;
+        }
+        //return Route(previous_path, ego_car, racers);
+        //return ChangeLane(previous_path, ego_car, racers, target_a); // - ego_car_lane);
+      }
+      else if (safe_b && cost_b >= 4) {
+        // check for two lane change
+        bool two_lane_change =  (abs(target_b - lane) == 2);
+        cout << boolalpha;
+        cout << "two_lane_change:" << two_lane_change << endl;
+
+        if (two_lane_change) {
+          cout << "its a two_lane_change..." << endl;
+          if (safe_a & safe_b) {
+            refVelocity -= 3.5;
+            cout << "change to lane:" << target_b << endl;
+            lane = target_b;
+          }
+        } else {
+          cout << "change to lane:" << target_b << endl;
+          lane = target_b;
+        }
+        //return Route(previous_path, ego_car, racers);
+        //return ChangeLane(previous_path, ego_car, racers, target_b); // - ego_car_lane);
+      }
     }
-    else if (safe_b && cost_b >= 4) {
-      cout << "change to line:" << target_b << endl;
-      return ChangeLane(previous_path, ego_car, racers, target_b); // - ego_car_lane);
-    }
-  }
-  return KeepLane(previous_path, ego_car, racers);
+
+//  return KeepLane(previous_path, ego_car, racers);
+  cout << "route to..." << endl;
+  return Route(previous_path, ego_car, racers);
 }
 
 Path SelfDrivingCar::FastStart(const Path &previous_path,
@@ -465,7 +716,7 @@ bool SelfDrivingCar::SafeToChangeLane(const Vehicle &ego_car,
 
   is_safe_to_change &= (ego_car.s >= 50) && (ego_car.s <= 6800);
   if (!is_safe_to_change) {
-    cout << " its NOT safe to change to lane " << target_lane;
+    cout << " (A) its NOT safe to change to lane " << target_lane;
     cout << endl;
     return false;
   }
@@ -482,6 +733,13 @@ bool SelfDrivingCar::SafeToChangeLane(const Vehicle &ego_car,
 //        fabs(ego_car.speed * kMilesPerHourToMetersPerSecond - carspeed)
 //        * response_time + kSafeCarDistance;
     auto dist = car.s - ego_car.s;
+
+    cout << " target_frontcar_idx:" << target_frontcar_idx;
+    cout << "  speeds diff:" << diff;
+    cout << ", safe dist:" << safe_distance;
+    cout << ", distance: " << dist;
+    cout << endl;
+
     is_safe_to_change &= (dist >= safe_distance);
 //    if (dist < safe_distance) {
       cout << " distance to front car in target lane " << dist;
@@ -489,7 +747,7 @@ bool SelfDrivingCar::SafeToChangeLane(const Vehicle &ego_car,
       cout << endl;
 //    }
     if (!is_safe_to_change) {
-      cout << " its NOT safe to change to lane " << target_lane;
+      cout << " (B) its NOT safe to change to lane " << target_lane;
       cout << endl;
       return false;
     }
@@ -506,6 +764,13 @@ bool SelfDrivingCar::SafeToChangeLane(const Vehicle &ego_car,
 //        fabs(carspeed - ego_car.speed *kMilesPerHourToMetersPerSecond)
 //        * response_time + kSafeCarDistance;
     auto dist = ego_car.s - car.s;
+
+    cout << " target_rearcar_idx:" << target_rearcar_idx;
+    cout << "  speeds diff:" << diff;
+    cout << ", safe dist:" << safe_distance;
+    cout << ", distance: " << dist;
+    cout << endl;
+
     is_safe_to_change &= (dist >= safe_distance);
 //    if (dist < safe_distance) {
       cout << " distance to rear car in target lane " << dist;
@@ -513,7 +778,7 @@ bool SelfDrivingCar::SafeToChangeLane(const Vehicle &ego_car,
       cout << endl;
 //    }
     if (!is_safe_to_change) {
-      cout << " its NOT safe to change to lane " << target_lane;
+      cout << " (C) its NOT safe to change to lane " << target_lane;
       cout << endl;
       return false;
     }
@@ -530,6 +795,13 @@ bool SelfDrivingCar::SafeToChangeLane(const Vehicle &ego_car,
 //        fabs(ego_car.speed*kMilesPerHourToMetersPerSecond - carspeed)
 //        * response_time + kSafeCarDistance;
     auto dist = car.s - ego_car.s;
+
+    cout << " current_frontcar_idx:" << current_frontcar_idx;
+    cout << "  speeds diff:" << diff;
+    cout << ", safe dist:" << safe_distance;
+    cout << ", distance: " << dist;
+    cout << endl;
+
     is_safe_to_change &= (dist >= safe_distance);
 //    if (dist < safe_distance) {
       cout << " distance to front car " << dist;
@@ -537,7 +809,7 @@ bool SelfDrivingCar::SafeToChangeLane(const Vehicle &ego_car,
       cout << endl;
 //    }
     if (!is_safe_to_change) {
-      cout << " its NOT safe to change to lane " << target_lane;
+      cout << " (D) its NOT safe to change to lane " << target_lane;
       cout << endl;
       return false;
     }
@@ -574,11 +846,11 @@ bool SelfDrivingCar::SafeToChangeLane(const Vehicle &ego_car,
   }
   */
   if (!is_safe_to_change) {
-    cout << " its NOT safe to change to lane " << target_lane;
+    cout << " ===>  its NOT safe to change to lane " << target_lane;
     cout << endl;
     return false;
   } else {
-    cout << " its SAFE to change to lane " << target_lane;
+    cout << " --->> its SAFE to change to lane " << target_lane;
     cout << endl;
     return true;
   }

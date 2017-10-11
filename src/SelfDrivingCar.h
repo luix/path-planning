@@ -26,7 +26,6 @@
 #include <vector>
 #include "Road.h"
 
-
 class SelfDrivingCar {
 private:
   Road road;
@@ -36,13 +35,18 @@ private:
   const int kPathLength = 40;
   const double kMilesPerHourToMetersPerSecond = 0.447;
   const double kMaxSpeed = 20; //22.22;
-  const double kSafeCarDistance = 15; // 15 meters
+  const double kRefVel = 47.5; //22.22;
+  const double kSafeCarDistance = 20; // 15 meters
+  const double kFrontCarSafeCarDistance = 3; // 15 meters
   const size_t kMaxPreviousPathSteps = 20;
   bool in_lane_change;
+  int lane;
+  double refVelocity = 4.5;
 
 public:
   SelfDrivingCar(const Road & road): road(road) {
     in_lane_change = false;
+    lane = 1;
   }
 
   virtual ~SelfDrivingCar() {}
@@ -50,6 +54,10 @@ public:
   Path Planner(const Path &previous_path,
                const Vehicle &ego_car,
                const vector<RaceCar> &racers);
+
+  Path Route(const Path &previous_path,
+             const Vehicle &ego_car,
+             const vector<RaceCar> &racers);
 
 private:
   Path FastStart(const Path &previous_path,

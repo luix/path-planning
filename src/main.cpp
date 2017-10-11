@@ -15,15 +15,6 @@ using namespace std;
 // for convenience
 using json = nlohmann::json;
 
-constexpr double pi() { return M_PI; }
-
-// For converting back and forth between radians and degrees.
-double deg2rad(double x) { return x * pi() / 180; }
-double rad2deg(double x) { return x * 180 / pi(); }
-
-double distance(double x1, double y1, double x2, double y2) {
-  return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
-}
 
 int loop_count = 0;
 
@@ -136,13 +127,17 @@ int main() {
 
             json msgJson;
 
-            Vehicle ego_car(car_x, car_y, car_s, car_d, car_yaw, car_speed);
+          Vehicle ego_car(car_x, car_y, car_s, car_d, car_yaw, car_speed);
+          if (previous_path_x.size() > 0) {
+            ego_car.s = end_path_s;
+          }
             Path previous_path(previous_path_x, previous_path_y);
             vector<RaceCar> racers;
             for (const SensorData & sensor : sensor_fusion) {
               racers.push_back(RaceCar{sensor});
             }
-            Path path = planner.Planner(previous_path, ego_car, racers);
+          Path path = planner.Planner(previous_path, ego_car, racers);
+          //Path path = planner.Route(previous_path, ego_car, racers);
 
             // Pass the plan to controller
             msgJson["next_x"] = path.X;
