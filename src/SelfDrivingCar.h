@@ -67,6 +67,7 @@ private:
              const vector<RaceCar> &racers,
              bool two_lane_change);
 
+  /*
   Path FastStart(const Path &previous_path,
                  const Vehicle &ego_car,
                  const vector<RaceCar> &racers);
@@ -79,12 +80,13 @@ private:
                   const Vehicle &ego_car,
                   const vector<RaceCar> &racers,
                   int lane_change);
+  */
 
   bool SafeToChangeLane(const Vehicle &ego_car,
                         const vector<RaceCar> &racers,
                         int target_lane) const;
 
-  double Accelerate(double current_speed, double target_speed) const;
+  //double Accelerate(double current_speed, double target_speed) const;
 };
 
 #endif //PATH_PLANNING_SELFDRIVINGCAR_H

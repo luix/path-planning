@@ -1,134 +1,170 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
-   
-### Simulator. You can download the Term3 Simulator BETA which contains the Path Planning Project from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
-
-In this project your goal is to safely navigate around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. You will be provided the car's localization and sensor fusion data, there is also a sparse map list of waypoints around the highway. The car should try to go as close as possible to the 50 MPH speed limit, which means passing slower traffic when possible, note that other cars will try to change lanes too. The car should avoid hitting other cars at all cost as well as driving inside of the marked road lanes at all times, unless going from one lane to another. The car should be able to make one complete loop around the 6946m highway. Since the car is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 loop. Also the car should not experience total acceleration over 10 m/s^2 and jerk that is greater than 50 m/s^3.
-
-#### The map of the highway is in data/highway_map.txt
-Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.
-
-The highway's waypoints loop around so the frenet s value, distance along the road, goes from 0 to 6945.554.
-
-## Basic Build Instructions
-
-1. Clone this repo.
-2. Make a build directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./path_planning`.
-
-Here is the data provided from the Simulator to the C++ Program
-
-#### Main car's localization Data (No Noise)
-
-["x"] The car's x position in map coordinates
-
-["y"] The car's y position in map coordinates
-
-["s"] The car's s position in frenet coordinates
-
-["d"] The car's d position in frenet coordinates
-
-["yaw"] The car's yaw angle in the map
-
-["speed"] The car's speed in MPH
-
-#### Previous path data given to the Planner
-
-//Note: Return the previous list but with processed points removed, can be a nice tool to show how far along
-the path has processed since last time. 
-
-["previous_path_x"] The previous list of x points previously given to the simulator
-
-["previous_path_y"] The previous list of y points previously given to the simulator
-
-#### Previous path's end s and d values 
-
-["end_path_s"] The previous list's last point's frenet s value
-
-["end_path_d"] The previous list's last point's frenet d value
-
-#### Sensor Fusion Data, a list of all other car's attributes on the same side of the road. (No Noise)
-
-["sensor_fusion"] A 2d vector of cars and then that car's [car's unique ID, car's x position in map coordinates, car's y position in map coordinates, car's x velocity in m/s, car's y velocity in m/s, car's s position in frenet coordinates, car's d position in frenet coordinates. 
-
-## Details
-
-1. The car uses a perfect controller and will visit every (x,y) point it recieves in the list every .02 seconds. The units for the (x,y) points are in meters and the spacing of the points determines the speed of the car. The vector going from a point to the next point in the list dictates the angle of the car. Acceleration both in the tangential and normal directions is measured along with the jerk, the rate of change of total Acceleration. The (x,y) point paths that the planner recieves should not have a total acceleration that goes over 10 m/s^2, also the jerk should not go over 50 m/s^3. (NOTE: As this is BETA, these requirements might change. Also currently jerk is over a .02 second interval, it would probably be better to average total acceleration over 1 second and measure jerk from that.
-
-2. There will be some latency between the simulator running and the path planner returning a path, with optimized code usually its not very long maybe just 1-3 time steps. During this delay the simulator will continue using points that it was last given, because of this its a good idea to store the last points you have used so you can have a smooth transition. previous_path_x, and previous_path_y can be helpful for this transition since they show the last points given to the simulator controller with the processed points already removed. You would either return a path that extends this previous path or make sure to create a new path that has a smooth transition with this last path.
-
-## Tips
-
-A really helpful resource for doing this project and creating smooth trajectories was using http://kluge.in-chemnitz.de/opensource/spline/, the spline function is in a single hearder file is really easy to use.
-
----
-
-## Dependencies
-
-* cmake >= 3.5
- * All OSes: [click here for installation instructions](https://cmake.org/install/)
-* make >= 4.1
-  * Linux: make is installed by default on most Linux distros
-  * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
-  * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
-* gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools]((https://developer.apple.com/xcode/features/)
-  * Windows: recommend using [MinGW](http://www.mingw.org/)
-* [uWebSockets](https://github.com/uWebSockets/uWebSockets)
-  * Run either `install-mac.sh` or `install-ubuntu.sh`.
-  * If you install from source, checkout to commit `e94b6e1`, i.e.
-    ```
-    git clone https://github.com/uWebSockets/uWebSockets 
-    cd uWebSockets
-    git checkout e94b6e1
-    ```
-
-## Editor Settings
-
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
 
 
-## Call for IDE Profiles Pull Requests
+This one has being so far the most challenging but also the most interesting project, and I also already passed the Advance Deep Learning project. I expect that only the Capstone be more challenge than this one.
 
-Help your fellow students!
+I know that there could be many improvements and I tried many of them. I had a version of this project ready for the Bosch Challenge on Sept 1st. and submitted it, but was not one of the first 25 places. Then I watched the Path Planning Walkthrough video and that was very helpful, so a good part of my code is based on what it was shown in that video.
 
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
+I spent many hours trying to make the car slow down smoothly when approaching to a car on the same lane. To achieve that I started by comparing the distance of the front car with a predefined safe distance, that is adjusted with the actual speed of the ego car. If the ego car distance to the front car is smaller than that safe distance, I turn on two flags to know that the ego car needs to slow down. Those flags are `is_free_to_go` and `match_frontcar_speed`, as shown here:
 
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
+```
+  bool is_free_to_go = true;
+  bool match_frontcar_speed = false;
+  auto front_car_speed = kRefVel * 2;
+  if (frontcar_idx != -1) {
+    const RaceCar & car(racers[frontcar_idx]);
+    double response_time = kTimeInterval * kPathLength;
+    auto safe_dist = ego_car.speed * kMilesPerHourToMetersPerSecond
+                     * response_time + kFrontCarSafeCarDistance;
+    auto dist = car.s - ego_car.s;
+    front_car_speed = sqrt(car.vx * car.vx + car.vy * car.vy);
+    cout << " frontcar dist:" << dist << endl;
+    cout << " safe dist:" << safe_dist << endl;
+    if (dist <= safe_dist) {
+      is_free_to_go = false;
+      if (ego_car.speed > front_car_speed) {
+        match_frontcar_speed = true;
+      }
+    }
+  }
+```
 
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
+Then I adjust if the speed of the ego car according to the front car speed, as shown here:
 
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
+```
+  if (!is_free_to_go) {
+    if (match_frontcar_speed) {
+      if (refVelocity > (front_car_speed * 0.9)) {
+        cout << "match_frontcar_speed..." << endl;
+        refVelocity -= 0.442; //(refVelocity * kTimeInterval);
+      } else {
+        refVelocity = front_car_speed;
+      }
+    }
+  } else {
+    if (refVelocity < kRefVel) {
+      cout << "accelerate" << is_free_to_go << endl;
+      refVelocity += 0.442; //(refVelocity * kTimeInterval);
+    }
+  }
+```
 
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
 
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
+I also spent many hours trying to figure out the best way to change lanes smoothly, and added a cost function to evaluate if a single or a double lane change would be the best.
+First, I consider the speed and distance of the car in the same lane as the ego car to know if a change lane should be considered, as shown here:
+
+```
+  bool two_lane_change = false;
+
+  int ego_car_lane = road.FindLane(ego_car.d);
+  double ego_car_speed = ego_car.speed * kMilesPerHourToMetersPerSecond;
+  vector<double> frontcar_speeds;
+  vector<double> frontcar_dists;
+  for (auto lane = 0; lane <= road.kRightMostLane; ++lane) {
+    auto frontcar_idx = road.FindFrontCarInLane(ego_car, racers, lane);
+    double frontcar_speed = kInfinity;
+    double frontcar_dist = kInfinity;
+    if (frontcar_idx != -1) {
+      const RaceCar & frontcar(racers[frontcar_idx]);
+      frontcar_speed = sqrt(frontcar.vx*frontcar.vx + frontcar.vy*frontcar.vy);
+      frontcar_dist = frontcar.s - ego_car.s;
+    }
+    frontcar_speeds.push_back(frontcar_speed);
+    frontcar_dists.push_back(frontcar_dist);
+  }
+```
+
+Then I evaluate which lane would be the best option to target. For that I evaluate first if the change to that lane is safe or not. A safe change would consider if there's enough space between the front car on that target lane, as well as a safe distance to a rear car on that lane too.
+
+```
+  int target_a = 0;
+  int target_b = 2;
+  if (ego_car_lane == 0) {
+    target_a = 1;
+  } else if (ego_car_lane == 2) {
+    target_b = 1;
+  }
+
+  double cost_a = 0;
+  double cost_b = 0;
+
+  bool safe_a = SafeToChangeLane(ego_car, racers, target_a);
+  bool safe_b = SafeToChangeLane(ego_car, racers, target_b);
+```
+
+After that, my cost function would add points to each target lane considering: if the front car of the target lane has greater speed than the ego car; which of the cars in the target lanes would have the greater speed; if the car in the target lane has greater speed than the front car in the ego's car lane; which car in the target lane has the longer distance or at least the minimum safe distance, as shown here:
+
+```
+  if (safe_a) cost_a++;
+  if (safe_b) cost_b++;
+
+  if (safe_a && frontcar_speeds[target_a] > ego_car_speed) cost_a++;
+  if (safe_b && frontcar_speeds[target_b] > ego_car_speed) cost_b++;
+  cout << "[compared speeds between ego and target] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
+
+  (frontcar_speeds[target_a] > frontcar_speeds[target_b]) ? cost_a++ : cost_b++;
+  cout << "[compared speeds between target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
+
+  if (safe_a && frontcar_speeds[target_a] >= frontcar_speeds[ego_car_lane] * 1.1) cost_a++;
+  if (safe_b && frontcar_speeds[target_b] >= frontcar_speeds[ego_car_lane] * 1.1) cost_b++;
+  cout << "[compared speeds on target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
+
+  if (safe_a && frontcar_dists[target_a] >= kSafeCarDistance + frontcar_dists[ego_car_lane]) cost_a++;
+  if (safe_b && frontcar_dists[target_b] >= kSafeCarDistance + frontcar_dists[ego_car_lane]) cost_b++;
+  cout << "[compared safe minimal distance on target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
+
+  if (safe_a && frontcar_dists[target_a] >= (kSafeCarDistance * 3) + frontcar_dists[ego_car_lane]) cost_a++;
+  if (safe_b && frontcar_dists[target_b] >= (kSafeCarDistance * 3) + frontcar_dists[ego_car_lane]) cost_b++;
+  cout << "[compared long distance on target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
+
+  if (safe_a && frontcar_dists[target_a] + kSafeCarDistance >= frontcar_dists[ego_car_lane]) cost_a++;
+  if (safe_b && frontcar_dists[target_b] + kSafeCarDistance >= frontcar_dists[ego_car_lane]) cost_b++;
+  cout << "[compared short distance on target lanes] cost_a: " << cost_a << " , cost_b:" << cost_b << endl;
+```
+
+And finally, depending on which of the two target lanes considered has the bigger cost, the lane of the ego car is decided.
+
+```
+  if (safe_a && cost_a >= 4 && cost_a > cost_b) {
+    // check for two lane change
+    two_lane_change =  (abs(target_a - ego_car_lane) == 2);
+    cout << boolalpha;
+    cout << "two_lane_change:" << two_lane_change << endl;
+
+    if (two_lane_change) {
+      cout << "its a two_lane_change..." << endl;
+      if (safe_a & safe_b) {
+        //refVelocity -= 3.5;
+        cout << "change to lane:" << target_a << endl;
+        ego_lane = target_a;
+      }
+    } else {
+      //refVelocity -= 1.25;
+      cout << "change to lane:" << target_a << endl;
+      ego_lane = target_a;
+    }
+  }
+  else if (safe_b && cost_b >= 4) {
+    // check for two lane change
+    two_lane_change =  (abs(target_b - ego_car_lane) == 2);
+    cout << boolalpha;
+    cout << "two_lane_change:" << two_lane_change << endl;
+
+    if (two_lane_change) {
+      cout << "its a two_lane_change..." << endl;
+      if (safe_a & safe_b) {
+        //refVelocity -= 3.5;
+        cout << "change to lane:" << target_b << endl;
+        ego_lane = target_b;
+      }
+    } else {
+      //refVelocity -= 1.25;
+      cout << "change to lane:" << target_b << endl;
+      ego_lane = target_b;
+    }
+  }
+```
+
+So, as mentioned before, this has been the most interesting project so far. I'm really excited to jump into the Capstone project finally.
+
