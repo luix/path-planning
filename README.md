@@ -175,9 +175,9 @@ Click to view.
 
 ### 27 Miles
 
-[![20 miles](/screen-shot/20-miles.png)]
-[![24 miles](/screen-shot/24-miles.png)]
-[![26 miles](/screen-shot/26-miles.png)]
-[![27 miles](/screen-shot/27-miles.png)]
+[![20 miles](/screen-shots/20-miles.png)]
+[![24 miles](/screen-shots/24-miles.png)]
+[![26 miles](/screen-shots/26-miles.png)]
+[![27 miles](/screen-shots/27-miles.png)]
 
 
