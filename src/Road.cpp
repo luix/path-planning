@@ -35,17 +35,23 @@ int Road::FindFrontCarInLane(const Vehicle &sdc,
                        int lane) const {
   int found_car = -1;
   double found_dist = kInfinity;
+  cout << " sdc.s:" << sdc.s << endl;
   for (auto i = 0; i < peer_cars.size(); ++i) {
     const RaceCar & car = peer_cars[i];
     auto car_lane = FindLane(car.d);
+    cout << "  car[" << i << "] lane: " << car_lane;
+    cout << ", car.s:" << car.s << endl;
     if ( (car_lane == lane) && (car.s >= sdc.s) ) {
       double dist = car.s - sdc.s;
+      cout << "   dist:" << dist << endl;
       if (dist < found_dist) {
         found_car = i;
         found_dist = dist;
+        cout << "   found_dist:" << found_dist << endl;
       }
     }
   }
+  cout << " found_car:" << found_car << endl;
   return found_car;
 }
 

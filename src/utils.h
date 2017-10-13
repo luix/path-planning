@@ -57,6 +57,8 @@ public:
 public:
   WayPoints X;
   WayPoints Y;
+  double end_path_s;
+  double end_path_d;
 };
 
 #endif //PATH_PLANNING_UTILS_H_H

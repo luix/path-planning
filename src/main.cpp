@@ -122,22 +122,33 @@ int main() {
             double end_path_s = j[1]["end_path_s"];
             double end_path_d = j[1]["end_path_d"];
 
-            // Sensor Fusion Data, a list of all other cars on the same side of the road.
+          cout << "  end_path_s:" << end_path_s;
+          cout << ", end_path_d:" << end_path_d;
+          cout << " }" << endl;
+
+          // Sensor Fusion Data, a list of all other cars on the same side of the road.
             auto sensor_fusion = j[1]["sensor_fusion"];
 
             json msgJson;
 
           Vehicle ego_car(car_x, car_y, car_s, car_d, car_yaw, car_speed);
-          if (previous_path_x.size() > 0) {
-            ego_car.s = end_path_s;
-          }
+//          if (previous_path_x.size() > 0) {
+//            ego_car.s = end_path_s;
+//          }
             Path previous_path(previous_path_x, previous_path_y);
+          previous_path.end_path_s = end_path_s;
+          previous_path.end_path_d = end_path_d;
             vector<RaceCar> racers;
             for (const SensorData & sensor : sensor_fusion) {
               racers.push_back(RaceCar{sensor});
             }
           Path path = planner.Planner(previous_path, ego_car, racers);
           //Path path = planner.Route(previous_path, ego_car, racers);
+
+//          for (int i = 0; i < path.size(); i++) {
+//            cout << " path[" << i << "] { x: " << path.X[i];
+//            cout << ", y: " << path.Y[i] << "}" << endl;
+//          }
 
             // Pass the plan to controller
             msgJson["next_x"] = path.X;

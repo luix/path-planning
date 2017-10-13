@@ -35,18 +35,23 @@ private:
   const int kPathLength = 40;
   const double kMilesPerHourToMetersPerSecond = 0.447;
   const double kMaxSpeed = 20; //22.22;
-  const double kRefVel = 47.5; //22.22;
-  const double kSafeCarDistance = 20; // 15 meters
-  const double kFrontCarSafeCarDistance = 3; // 15 meters
+  const double kRefVel = 49.25; //22.22;
+  const double kSafeCarDistance = 15; // 15 meters
+  const double kFrontCarSafeCarDistance = 20; // 15 meters
   const size_t kMaxPreviousPathSteps = 20;
   bool in_lane_change;
-  int lane;
+  int ego_lane;
   double refVelocity = 4.5;
+
+  //const int short_spline[3] = {45, 67, 90};
+  //const int  long_spline[3] = {60, 75, 90};
+  const int short_spline[3] = {30, 60, 90};
+  const int  long_spline[3] = {45, 67, 90};
 
 public:
   SelfDrivingCar(const Road & road): road(road) {
     in_lane_change = false;
-    lane = 1;
+    ego_lane = 1;
   }
 
   virtual ~SelfDrivingCar() {}
@@ -55,11 +60,13 @@ public:
                const Vehicle &ego_car,
                const vector<RaceCar> &racers);
 
-  Path Route(const Path &previous_path,
-             const Vehicle &ego_car,
-             const vector<RaceCar> &racers);
 
 private:
+  Path Route(const Path &previous_path,
+             const Vehicle &ego_car,
+             const vector<RaceCar> &racers,
+             bool two_lane_change);
+
   Path FastStart(const Path &previous_path,
                  const Vehicle &ego_car,
                  const vector<RaceCar> &racers);
