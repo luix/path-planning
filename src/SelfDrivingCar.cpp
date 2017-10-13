@@ -35,7 +35,8 @@ double distance(double x1, double y1, double x2, double y2) {
   return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
 }
 
-int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vector<double> &maps_y)
+int ClosestWaypoint(double x, double y, const vector<double> &maps_x,
+                    const vector<double> &maps_y)
 {
 
   double closestLen = 100000; //large number
@@ -58,7 +59,8 @@ int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vect
 
 }
 
-int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
+int NextWaypoint(double x, double y, double theta,
+                 const vector<double> &maps_x, const vector<double> &maps_y)
 {
 
   int closestWaypoint = ClosestWaypoint(x,y,maps_x,maps_y);
@@ -81,7 +83,8 @@ int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
 
 
 // Transform from Frenet s,d coordinates to Cartesian x,y
-vector<double> getXY(double s, double d, const vector<double> &maps_s, const vector<double> &maps_x, const vector<double> &maps_y)
+vector<double> getXY(double s, double d, const vector<double> &maps_s,
+                     const vector<double> &maps_x, const vector<double> &maps_y)
 {
   int prev_wp = -1;
 
@@ -109,7 +112,8 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 }
 
 // Transform from Cartesian x,y coordinates to Frenet s,d coordinates
-vector<double> getFrenet(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
+vector<double> getFrenet(double x, double y, double theta,
+                         const vector<double> &maps_x, const vector<double> &maps_y)
 {
   int next_wp = NextWaypoint(x,y, theta, maps_x,maps_y);
 
@@ -171,21 +175,21 @@ Path SelfDrivingCar::Route(const Path &previous_path,
   auto front_car_speed = kRefVel * 2;
   if (frontcar_idx != -1) {
     const RaceCar & car(racers[frontcar_idx]);
-//    double response_time = kTimeInterval * kPathLength;
-//    auto safe_dist = ego_car.speed * kMilesPerHourToMetersPerSecond
-//                     * response_time + kSafeCarDistance;
+    double response_time = kTimeInterval * kPathLength;
+    auto safe_dist = ego_car.speed * kMilesPerHourToMetersPerSecond
+                     * response_time + kFrontCarSafeCarDistance;
     auto dist = car.s - ego_car.s;
     front_car_speed = sqrt(car.vx * car.vx + car.vy * car.vy);
-    cout << " --------------------------------------->>  frontcar dist:" << dist << endl;
+    cout << " frontcar dist:" << dist << endl;
+    cout << " safe dist:" << safe_dist << endl;
     //is_free_to_go = (dist >= safe_dist);
-
-    if (dist <= kFrontCarSafeCarDistance) {
+    if (dist <= safe_dist) {
+    //if (dist <= kFrontCarSafeCarDistance) {
       is_free_to_go = false;
       if (ego_car.speed > front_car_speed) {
         match_frontcar_speed = true;
       }
     }
-      //is_free_to_go = (dist >= kFrontCarSafeCarDistance || ego_car.speed <= front_car_speed);
   }
 
   //cout << boolalpha;
@@ -194,9 +198,9 @@ Path SelfDrivingCar::Route(const Path &previous_path,
 
   if (!is_free_to_go) {
     if (match_frontcar_speed) {
-      if (refVelocity > (front_car_speed * 0.6)) {
+      if (refVelocity > (front_car_speed * 0.9)) {
         cout << "match_frontcar_speed..." << endl;
-        refVelocity -= 0.448;
+        refVelocity -= 0.442; //(refVelocity * kTimeInterval);
       } else {
         refVelocity = front_car_speed;
       }
@@ -204,7 +208,7 @@ Path SelfDrivingCar::Route(const Path &previous_path,
   } else {
     if (refVelocity < kRefVel) {
       cout << "accelerate" << is_free_to_go << endl;
-      refVelocity += 0.448;
+      refVelocity += 0.442; //(refVelocity * kTimeInterval);
     }
   }
 

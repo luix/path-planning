@@ -37,7 +37,7 @@ private:
   const double kMaxSpeed = 20; //22.22;
   const double kRefVel = 49.25; //22.22;
   const double kSafeCarDistance = 15; // 15 meters
-  const double kFrontCarSafeCarDistance = 20; // 15 meters
+  const double kFrontCarSafeCarDistance = 8; // 15 meters
   const size_t kMaxPreviousPathSteps = 20;
   bool in_lane_change;
   int ego_lane;
