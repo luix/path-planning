@@ -168,3 +168,16 @@ And finally, depending on which of the two target lanes considered has the bigge
 
 So, as mentioned before, this has been the most interesting project so far. I'm really excited to jump into the Capstone project finally.
 
+Screenshots
+-----------
+
+Click to view.
+
+### 27 Miles
+
+[![20 miles](/screen-shot/20-miles.png)]
+[![24 miles](/screen-shot/24-miles.png)]
+[![26 miles](/screen-shot/26-miles.png)]
+[![27 miles](/screen-shot/27-miles.png)]
+
+
