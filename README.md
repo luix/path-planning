@@ -179,8 +179,3 @@ Click to view.
 [![24 miles](/screen-shots/24-miles.png)]
 [![26 miles](/screen-shots/26-miles.png)]
 [![27 miles](/screen-shots/27-miles.png)]
-
-
-
--  9/Dic/2019 -
-- 11/Dic/2019 -
